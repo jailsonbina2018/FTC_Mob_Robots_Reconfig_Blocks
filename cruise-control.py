@@ -255,23 +255,23 @@ def pi_update(t, x, u, params={}):
     # Calcule a saída nominal do controlador (necessária para o anti-windup)
     u_a = pi_output(t, x, u, params)
 
-    # Compute anti-windup compensation (scale by ki to account for structure)
+    # Calcule a compensação anti-windup (dimensione por ki para levar em conta a estrutura)
     u_aw = kaw/ki * (np.clip(u_a, 0, 1) - u_a) if ki != 0 else 0
 
-    # State is the integrated error, minus anti-windup compensation
+    # O estado é o erro integrado, menos a compensação anti-windup
     return (vref - v) + u_aw
 
 def pi_output(t, x, u, params={}):
-    # Get the controller parameters that we need
+    # Obter os parâmetros do controlador de que precisamos
     kp = params.get('kp', 0.5)
     ki = params.get('ki', 0.1)
 
-    # Assign variables for inputs and states (for readability)
-    v = u[0]                    # current velocity
-    vref = u[1]                 # reference velocity
-    z = x[0]                    # integrated error
+    # Atribuir variáveis para entradas e estados (para facilitar a leitura)
+    v = u[0]                    # velocidade atual
+    vref = u[1]                 # Velocidade de referência
+    z = x[0]                    # Erro integrado
 
-    # PI controller
+    # Controlador PI
     return kp * (vref - v) + ki * z
 
 control_pi = ct.NonlinearIOSystem(
@@ -279,7 +279,7 @@ control_pi = ct.NonlinearIOSystem(
     inputs=['v', 'vref'], outputs=['u'], states=['z'],
     params={'kp': 0.5, 'ki': 0.1})
 
-# Create the closed loop system
+# Criar o sistema de malha fechada
 cruise_pi = ct.InterconnectedSystem(
     (vehicle, control_pi), name='cruise',
     connections=[
@@ -288,28 +288,28 @@ cruise_pi = ct.InterconnectedSystem(
     inplist=['control.vref', 'vehicle.gear', 'vehicle.theta'],
     outlist=['control.u', 'vehicle.v'], outputs=['u', 'v'])
 
-# Figure 4.3b shows the response of the closed loop system.  The figure shows
-# that even if the hill is so steep that the throttle changes from 0.17 to
-# almost full throttle, the largest speed error is less than 1 m/s, and the
-# desired velocity is recovered after 20 s.
+# A Figura 4.3b mostra a resposta do sistema de circuito fechado.  A figura mostra
+# que, mesmo que a colina seja tão íngreme que o acelerador mude de 0,17 para
+# quase a aceleração total, o maior erro de velocidade é inferior a 1 m/s, e a
+# velocidade desejada é recuperada após 20 s.
 
-# Define a function for creating a "standard" cruise control plot
+# Defina uma função para criar um gráfico de controle de cruzeiro "padrão"
 def cruise_plot(sys, t, y, label=None, t_hill=None, vref=20, antiwindup=False,
                 linetype='b-', subplots=None, legend=None):
     if subplots is None:
         subplots = [None, None]
-    # Figure out the plot bounds and indices
+    # Descubra os limites e os índices do gráfico
     v_min = vref-1.2; v_max = vref+0.5; v_ind = sys.find_output('v')
     u_min = 0; u_max = 2 if antiwindup else 1; u_ind = sys.find_output('u')
 
-    # Make sure the upper and lower bounds on v are OK
+    # Certifique-se de que os limites superior e inferior de v estejam corretos
     while max(y[v_ind]) > v_max: v_max += 1
     while min(y[v_ind]) < v_min: v_min -= 1
 
-    # Create arrays for return values
+    # Criar matrizes para valores de retorno
     subplot_axes = list(subplots)
 
-    # Velocity profile
+    # Perfil de velocidade
     if subplot_axes[0] is None:
         subplot_axes[0] = plt.subplot(2, 1, 1)
     else:
@@ -322,15 +322,15 @@ def cruise_plot(sys, t, y, label=None, t_hill=None, vref=20, antiwindup=False,
     plt.xlabel('Time $t$ [s]')
     plt.ylabel('Velocity $v$ [m/s]')
 
-    # Commanded input profile
+    # Perfil de entrada comandada
     if subplot_axes[1] is None:
         subplot_axes[1] = plt.subplot(2, 1, 2)
     else:
         plt.sca(subplots[1])
     plt.plot(t, y[u_ind], 'r--' if antiwindup else linetype, label=label)
-    # Applied input profile
+    # Perfil de entrada aplicado
     if antiwindup:
-        # TODO: plot the actual signal from the process?
+        # TODO: traçar o sinal real do processo?
         plt.plot(t, np.clip(y[u_ind], 0, 1), linetype, label='Applied')
     if t_hill:
         plt.axvline(t_hill, color='k', linestyle='--')
@@ -342,19 +342,19 @@ def cruise_plot(sys, t, y, label=None, t_hill=None, vref=20, antiwindup=False,
 
     return subplot_axes
 
-# Define the time and input vectors
+# Defina o tempo e os vetores de entrada
 T = np.linspace(0, 30, 101)
 vref = 20 * np.ones(T.shape)
 gear = 4 * np.ones(T.shape)
 theta0 = np.zeros(T.shape)
 
-# Compute the equilibrium throttle setting for the desired speed (solve for x
-# and u given the gear, slope, and desired output velocity)
+# Calcule a configuração do acelerador de equilíbrio para a velocidade desejada (resolva para x
+# e u, considerando a marcha, a inclinação e a velocidade de saída desejada)
 X0, U0, Y0 = ct.find_eqpt(
     cruise_pi, [vref[0], 0], [vref[0], gear[0], theta0[0]],
     y0=[0, vref[0]], iu=[1, 2], iy=[1], return_y=True)
 
-# Now simulate the effect of a hill at t = 5 seconds
+# Agora simule o efeito de uma colina em t = 5 segundos
 plt.figure()
 plt.suptitle('Car with cruise control encountering sloping road')
 theta_hill = [
@@ -365,30 +365,30 @@ t, y = ct.input_output_response(cruise_pi, T, [vref, gear, theta_hill], X0)
 cruise_plot(cruise_pi, t, y, t_hill=5)
 
 #
-# Example 7.8: State space feedback with integral action
+# Exemplo 7.8: Realimentação do espaço de estado com ação integral
 #
 
-# State space controller model: control_sf_ia()
+# Modelo de controlador de espaço de estado: control_sf_ia()
 #
-# Construct a state space controller with integral action, linearized around
-# an equilibrium point.  The controller is constructed around the equilibrium
-# point (x_d, u_d) and includes both feedforward and feedback compensation.
+# Construa um controlador de espaço de estado com ação integral, linearizado em torno de
+# um ponto de equilíbrio.  O controlador é construído em torno do ponto de equilíbrio
+# (x_d, u_d) e inclui compensação de feedback e feedforward.
 #
-# Controller inputs: (x, y, r)    system states, system output, reference
-# Controller state:  z            integrated error (y - r)
-# Controller output: u            state feedback control
+# Entradas do controlador: (x, y, r) estados do sistema, saída do sistema, referência
+# Estado do controlador: erro integrado z (y - r)
+# Saída do controlador: controle de feedback do estado u
 #
-# Note: to make the structure of the controller more clear, we implement this
-# as a "nonlinear" input/output module, even though the actual input/output
-# system is linear.  This also allows the use of parameters to set the
-# operating point and gains for the controller.
+# Observação: para tornar a estrutura do controlador mais clara, implementamos isso
+# como um módulo de entrada/saída "não linear", embora o sistema real de entrada/saída
+# seja linear.  Isso também permite o uso de parâmetros para definir o
+# ponto de operação e ganhos para o controlador.
 
 def sf_update(t, z, u, params={}):
     y, r = u[1], u[2]
     return y - r
 
 def sf_output(t, z, u, params={}):
-    # Get the controller parameters that we need
+    # Obter os parâmetros do controlador de que precisamos
     K = params.get('K', 0)
     ki = params.get('ki', 0)
     kf = params.get('kf', 0)
@@ -396,19 +396,19 @@ def sf_output(t, z, u, params={}):
     yd = params.get('yd', 0)
     ud = params.get('ud', 0)
 
-    # Get the system state and reference input
+    # Obter o estado do sistema e a entrada de referência
     x, y, r = u[0], u[1], u[2]
 
     return ud - K * (x - xd) - ki * z + kf * (r - yd)
 
-# Create the input/output system for the controller
+# Obter o estado do sistema e a entrada de referência
 control_sf = ct.NonlinearIOSystem(
     sf_update, sf_output, name='control',
     inputs=('x', 'y', 'r'),
     outputs=('u'),
     states=('z'))
 
-# Create the closed loop system for the state space controller
+# Criar o sistema de loop fechado para o controlador de espaço de estado
 cruise_sf = ct.InterconnectedSystem(
     (vehicle, control_sf), name='cruise',
     connections=[
@@ -418,23 +418,23 @@ cruise_sf = ct.InterconnectedSystem(
     inplist=['control.r', 'vehicle.gear', 'vehicle.theta'],
     outlist=['control.u', 'vehicle.v'], outputs=['u', 'v'])
 
-# Compute the linearization of the dynamics around the equilibrium point
+# Calcule a linearização da dinâmica em torno do ponto de equilíbrio
 
-# Y0 represents the steady state with PI control => we can use it to
-# identify the steady state velocity and required throttle setting.
+# Y0 representa o estado estável com controle PI => podemos usá-lo para
+# Identificar a velocidade de estado estável e a configuração necessária do acelerador.
 xd = Y0[1]
 ud = Y0[0]
 yd = Y0[1]
 
-# Compute the linearized system at the eq pt
+# Calcule o sistema linearizado no ponto de partida da eq
 cruise_linearized = ct.linearize(vehicle, xd, [ud, gear[0], 0])
 
-# Construct the gain matrices for the system
+# Construa as matrizes de ganho para o sistema
 A, B, C = cruise_linearized.A, cruise_linearized.B[0, 0], cruise_linearized.C
 K = 0.5
 kf = -1 / (C * np.linalg.inv(A - B * K) * B)
 
-# Response of the system with no integral feedback term
+# Resposta do sistema sem termo de realimentação integral
 plt.figure()
 plt.suptitle('Cruise control with proportional and PI control')
 theta_hill = [
@@ -446,18 +446,18 @@ t, y = ct.input_output_response(
     params={'K': K, 'kf': kf, 'ki': 0.0, 'kf': kf, 'xd': xd, 'ud': ud, 'yd': yd})
 subplots = cruise_plot(cruise_sf, t, y, label='Proportional', linetype='b--')
 
-# Response of the system with state feedback + integral action
+# Resposta do sistema com realimentação de estado + ação integral
 t, y = ct.input_output_response(
     cruise_sf, T, [vref, gear, theta_hill], [X0[0], 0],
     params={'K': K, 'kf': kf, 'ki': 0.1, 'kf': kf, 'xd': xd, 'ud': ud, 'yd': yd})
 cruise_plot(cruise_sf, t, y, label='PI control', t_hill=8, linetype='b-',
             subplots=subplots, legend=True)
 
-# Example 11.5: simulate the effect of a (steeper) hill at t = 5 seconds
+# Exemplo 11.5: simular o efeito de uma colina (mais íngreme) em t = 5 segundos
 #
-# The windup effect occurs when a car encounters a hill that is so steep (6
-# deg) that the throttle saturates when the cruise controller attempts to
-# maintain speed.
+# O efeito windup ocorre quando um carro encontra uma colina tão íngreme (6
+# graus) que o acelerador satura quando o controlador de velocidade de cruzeiro tenta
+# manter a velocidade.
 
 plt.figure()
 plt.suptitle('Cruise control with integrator windup')
@@ -473,12 +473,12 @@ t, y = ct.input_output_response(
 cruise_plot(cruise_pi, t, y, label='Commanded', t_hill=5, antiwindup=True,
             legend=True)
 
-# Example 11.6: add anti-windup compensation
+# Exemplo 11.6: adicionar compensação anti-windup
 #
-# Anti-windup can be applied to the system to improve the response. Because of
-# the feedback from the actuator model, the output of the integrator is
-# quickly reset to a value such that the controller output is at the
-# saturation limit.
+# O anti-windup pode ser aplicado ao sistema para melhorar a resposta. Devido ao
+# do feedback do modelo do atuador, a saída do integrador é
+# rapidamente redefinida para um valor tal que a saída do controlador esteja no
+# limite de saturação.
 
 plt.figure()
 plt.suptitle('Cruise control with integrator anti-windup protection')
@@ -488,7 +488,7 @@ t, y = ct.input_output_response(
 cruise_plot(cruise_pi, t, y, label='Commanded', t_hill=5, antiwindup=True,
             legend=True)
 
-# If running as a standalone program, show plots and wait before closing
+# Se estiver sendo executado como um programa autônomo, mostre os gráficos e aguarde antes de fechar
 import os
 if __name__ == '__main__' and 'PYCONTROL_TEST_EXAMPLES' not in os.environ:
     plt.show()
