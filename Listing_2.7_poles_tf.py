@@ -14,4 +14,4 @@ print('poles = ', p)
 print('zeros = ', z)
 
 plt.show()
-plt.savefig('poles_zeros.pdf')
+# plt.savefig('poles_zeros.pdf')

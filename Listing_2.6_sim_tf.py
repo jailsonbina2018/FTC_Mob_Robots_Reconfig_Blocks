@@ -18,7 +18,7 @@ t = np.linspace(t0, t1, nt)
 u = 1*np.ones(nt)
 
 # %% Simulation:
-(t, y) = ct.forced_response(H, t, u, X0=0)
+(t, y) = ct.step_response(H, t, X0=0)
 
 # %% Plotting:
 plt.close('all')
