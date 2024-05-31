@@ -54,8 +54,8 @@ U_X = np.concatenate((U_01T, X_0T), axis=0)
 X_1T = B_A.dot(U_X)
 # print(np.shape(X_1T))
 # print(A)
-X_0T = cp.Parameter((4, 15), value=X_0T)
-X_1T = cp.Parameter((4, 15), value=X_1T)
+X_0T = cp.Parameter((4, 4), value=X_0T)
+X_1T = cp.Parameter((4, 4), value=X_1T)
 
 Q = cp.Variable(shape=(2,2), symmetric=True)
 
