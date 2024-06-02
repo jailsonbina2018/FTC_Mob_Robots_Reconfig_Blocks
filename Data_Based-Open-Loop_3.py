@@ -39,10 +39,11 @@ xi0 = np.random.rand(n, 1)
 xi = np.zeros((n, n))
 
 xi[:, 0] = xi0.squeeze()
+print(np.shape(xi[0,:]))
 
 for i in range(n-1):
     xi[:, i+1] = sys.A @ xi[:, i] + sys.B @ ui[:, i]
-    
+          
 X_0T = xi
 U_01T = ui
 

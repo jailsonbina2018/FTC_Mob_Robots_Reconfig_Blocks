@@ -91,34 +91,44 @@ prob = cp.Problem(obj, constraints)
 prob.solve(solver=cp.MOSEK, verbose=False)
 # print(Q.value)
 
+# Control law
 Kn = U0.value @ Q.value @ linalg.inv(X0.value @ Q.value)
 Kn = np.array(Kn)
 Kn = np.round(Kn, decimals=4)
+
+# Simulate the closed-loop system
+
+x = np.zeros((4, T))
+# u = np.zeros((2, T))
 un = np.dot(Kn, x)
 
-# print(f"K = {K}")
-print(f"Kn = {Kn}")
-print(f"un = {un}")
+# x[:, 0] = x.flatten()
+# u[:, 0] = un.flatten()
 
-""" for i in range(T-1):
-    un[:, i+1] = np.dot(Kn, x[:, i])
-    x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, un[:, i]) """
 
-# Gráficos
+for i in range(T-1):
+    u[:, i+1] = np.dot(Kn, x[:, i])
+    x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, u[:, i])
+# Plot the results
+plt.figure(figsize=(10, 4))
 
-t = np.linspace(0, 15, 15)
-plt.figure()
-plt.plot(t, x[0], linestyle='-', color='#120a8f', label='$x_1$',)
-plt.xlabel('Tempo(s)')
-plt.ylabel('$x_1$')
-plt.title('Estado $x_1$ em Malha Aberta')
+plt.subplot(1, 2, 1)
+plt.plot(np.arange(T), x[0, :], label='$x_1$')
+plt.plot(np.arange(T), x[1, :], label='$x_2$')
+plt.plot(np.arange(T), x[2, :], label='$x_3$')
+plt.plot(np.arange(T), x[3, :], label='$x_4$')
+plt.xlabel('Tempo (s)')
+plt.ylabel('Valor do Estado')
+plt.title('Trajetória do estado')
 plt.legend()
-plt.grid(True)
+
+plt.subplot(1, 2, 2)
+plt.plot(np.arange(T), u[0, :], label='$u_1$')
+plt.plot(np.arange(T), u[1, :], label='$u_2$')
+plt.xlabel('Tempo (s)')
+plt.ylabel('Valor de controle')
+plt.title('Trajetória de controle')
+plt.legend()
+
+plt.tight_layout()
 plt.show()
-
-
-
-
-
-
-
