@@ -1,7 +1,7 @@
 import control as ct
 import cvxpy as cp
 import numpy as np
-from numpy.linalg import inv
+from numpy.linalg import inv, eig 
 from numpy import linalg
 import matplotlib.pyplot as plt
 
@@ -96,9 +96,14 @@ Kn = U0.value @ Q.value @ linalg.inv(X0.value @ Q.value)
 Kn = np.array(Kn)
 Kn = np.round(Kn, decimals=4)
 
+abs_K = np.absolute(eig(A + B @ K))
+print(f'abs_K = {abs_K}')
+
+abs_Kn = np.absolute(eig(A + B @ K))
+print(f'abs_Kn = {abs_Kn}')
 # Simulate the closed-loop system
 
-x = np.zeros((4, T))
+# x = np.zeros((4, T))
 # u = np.zeros((2, T))
 un = np.dot(Kn, x)
 
@@ -107,8 +112,10 @@ un = np.dot(Kn, x)
 
 
 for i in range(T-1):
-    u[:, i+1] = np.dot(Kn, x[:, i])
-    x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, u[:, i])
+    #un[:, i+1] = np.dot(Kn, x[:, i])
+    x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, un[:, i])
+
+
 # Plot the results
 plt.figure(figsize=(10, 4))
 
