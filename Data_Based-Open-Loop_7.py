@@ -1,7 +1,7 @@
 import control as ct
 import cvxpy as cp
 import numpy as np
-from numpy.linalg import inv, eig 
+from numpy.linalg import inv, eig
 from numpy import linalg
 import matplotlib.pyplot as plt
 
@@ -96,24 +96,70 @@ Kn = U0.value @ Q.value @ linalg.inv(X0.value @ Q.value)
 Kn = np.array(Kn)
 Kn = np.round(Kn, decimals=4)
 
-abs_K = np.absolute(eig(A + B @ K))
-print(f'abs_K = {abs_K}')
 
-abs_Kn = np.absolute(eig(A + B @ K))
-print(f'abs_Kn = {abs_Kn}')
+# print(np.shape(A))
+# print(np.shape(B))
+# print(np.shape(K))
+
+# abs_Kn = np.abs(np.linalg.eig(A + B @ Kn)[0])
+# abs_K = np.absolute(eig(A + np.dot(B,K)))
+
+S_K = A + np.dot(B, K)
+S_Kn = A + np.dot(B, Kn)
+
+abs_K = np.linalg.norm(S_K)
+abs_Kn = np.linalg.norm(S_Kn)
+
+# print(f'abs_K = {abs_K}')
+# print(f'abs_Kn = {abs_Kn}')
+
+
+# abs_Kn = np.absolute(eig(A + B @ Kn))
+# print(f'abs_Kn = {abs_Kn}')
 # Simulate the closed-loop system
 
-# x = np.zeros((4, T))
-# u = np.zeros((2, T))
-un = np.dot(Kn, x)
 
-# x[:, 0] = x.flatten()
-# u[:, 0] = un.flatten()
+
+u = np.random.rand(2, 15)
+x = np.zeros((4, 15))
+x0 = np.random.rand(4, 1)
+u0 = np.random.rand(2, 1)
+
+for i in range(n):
+     x[i, 0] = np.dot(sys.A[i, :], x0).item() + np.dot(sys.B[i, :], u0).item()
+     # x[i, 0] = sys.A[i, :] @ x0 + sys.B[i, :] @ u0
+     # x[i, 0] = np.dot(sys.A[i, :].flatten(), x0) + np.dot(sys.B[i, :].flatten(), u0)
+     # x[i, 0] = np.dot(sys.A[i, :], x0) + np.dot(sys.B[i, :], u0)
+""" 
+for i in range(T-1):
+     x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, u[:, i]) 
+     # x[:, i+1] = sys.A @ x[:, i] + sys.B @ u[:, i]
+     
+ """
+
+
+
+
+xn = np.zeros((4, T))
+un = np.zeros((2, T))
+#un = np.dot(Kn, x)
+Kp = 0.5
+
+#AK = A - np.dot(Kp, np.dot(B, Kn))
+
+#BK = np.dot(Kp, B)
+
+r = np.ones((2, T))
+#print(r)
+#sys_c = ct.ss(AK, BK, C, D, dt=T_s)
+#x[:, 0] = x.flatten()
+#u[:, 0] = u.flatten()
 
 
 for i in range(T-1):
-    #un[:, i+1] = np.dot(Kn, x[:, i])
-    x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, un[:, i])
+
+    un[:, i+1] = np.dot(Kp, r[:, i]) - np.dot(Kp, np.dot(Kn, x[:, i]))
+    xn[:, i+1] = np.dot(sys.A, xn[:, i]) + np.dot(sys.B, un[:, i])
 
 
 # Plot the results
@@ -130,12 +176,12 @@ plt.title('Trajetória do estado')
 plt.legend()
 
 plt.subplot(1, 2, 2)
-plt.plot(np.arange(T), u[0, :], label='$u_1$')
-plt.plot(np.arange(T), u[1, :], label='$u_2$')
+plt.plot(np.arange(T), r[0, :], label='$u_1$')
+plt.plot(np.arange(T), r[1, :], label='$u_2$')
 plt.xlabel('Tempo (s)')
 plt.ylabel('Valor de controle')
 plt.title('Trajetória de controle')
 plt.legend()
 
-plt.tight_layout()
+plt.tight_layout() 
 plt.show()

@@ -1,7 +1,7 @@
 import control as ct
 import cvxpy as cp
 import numpy as np
-from numpy.linalg import inv
+from numpy.linalg import inv, eig
 from numpy import linalg
 import matplotlib.pyplot as plt
 
@@ -37,28 +37,33 @@ T = 15 # Quantidade de amostras.
 
 
 # Criar o sistema de espaço de estado
-sys = ct.ss(A, B, C, D, dt=T_s)
+sys = ct.ss(A, B, C, D, )
+sys_disc = ct.c2d(sys,dt=T_s)
 
 # Trajetórias iniciais de E/S para simulação para obter alguns dados
 
-u = np.random.rand(2, 15)
-x = np.zeros((4, 15))
+u = np.random.rand(2, T)
+x = np.zeros((4, T))
 x0 = np.random.rand(4, 1)
 u0 = np.random.rand(2, 1)
 
-for i in range(n):
+""" for i in range(n):
      x[i, 0] = np.dot(sys.A[i, :], x0).item() + np.dot(sys.B[i, :], u0).item()
-     # x[i, 0] = sys.A[i, :] @ x0 + sys.B[i, :] @ u0
-     # x[i, 0] = np.dot(sys.A[i, :].flatten(), x0) + np.dot(sys.B[i, :].flatten(), u0)
-     # x[i, 0] = np.dot(sys.A[i, :], x0) + np.dot(sys.B[i, :], u0)
 
-for i in range(T-1):
-     x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, u[:, i]) 
-     # x[:, i+1] = sys.A @ x[:, i] + sys.B @ u[:, i]
+# print(f'x0 = {x}')
      
 
-U0 = np.hstack((u0, u[:, 1:15]))
-X0 = np.hstack((x0, x[:, 1:15]))
+# Sistema em Malha Aberta
+for i in range(T-1):
+     x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, u[:, i])
+
+print(f'xd = {x[0, :] }') """
+
+     
+     
+
+U0 = np.hstack((u0, u[:, 1:T]))
+X0 = np.hstack((x0, x[:, 1:T]))
 
 B_A = np.concatenate((B, A), axis=1)
 U_X = np.concatenate((U0, X0), axis=0)
@@ -91,27 +96,16 @@ prob = cp.Problem(obj, constraints)
 prob.solve(solver=cp.MOSEK, verbose=False)
 # print(Q.value)
 
+# Control law
 Kn = U0.value @ Q.value @ linalg.inv(X0.value @ Q.value)
 Kn = np.array(Kn)
 Kn = np.round(Kn, decimals=4)
-un = np.dot(Kn, x)
 
-Kp = 0.5
+# print(Kn)
 
-r = np.ones((2, T))
+#r = np.ones((2, 15))
 
-# print(f"K = {K}")
-print(f"Kn = {Kn}")
-print(f"un = {un}")
-
-
-
-for i in range(T-1):
-     #un[:, i+1] = np.dot(Kn, x[:, i])
-     x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, un[:, i])
-
-# Gráficos
-
+# Plot the results
 plt.figure(figsize=(10, 4))
 
 #plt.subplot(1, 2, 1)
@@ -125,13 +119,14 @@ plt.xlabel('Tempo (s)')
 plt.ylabel('Valor do Estado')
 plt.title('Trajetória do estado')
 plt.legend()
+
+""" plt.subplot(1, 2, 2)
+plt.plot(np.arange(T), r[0, :], label='$r_1$')
+plt.plot(np.arange(T), r[1, :], label='$2_2$')
+plt.xlabel('Tempo (s)')
+plt.ylabel('Valor de controle')
+plt.title('Trajetória de controle')
+plt.legend() """
+
 plt.tight_layout() 
 plt.show()
-
-
-
-
-
-
-
-
