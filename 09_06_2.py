@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+n = 4
 # System matrices
 A = np.array([[1.178, 0.001, 0.511, -0.43],
               [-0.051, 0.661, -0.011, 0.061],
@@ -19,18 +20,18 @@ D = np.zeros((2, 2))
 
 T_s = 0.1  # Sampling time
 T = 15     # Number of samples for each state
-u = np.random.rand(2, T)  # Random input
+u = np.random.rand(T, 2)  # Random input
 
 # Initial state
-x0 = np.array([0, 0, 0, 0])
+# x0 = np.array([0, 0, 0, 0])
 
-u = np.random.rand(2, 15)
-x = np.zeros((4, 15))
+u = np.random.rand(2, T)
+x = np.zeros((4, T))
 x0 = np.random.rand(4, 1)
 u0 = np.random.rand(2, 1)
 
 
-for i in range(4):
+for i in range(n):
      x[i, 0] = np.dot(A[i, :], x0).item() + np.dot(B[i, :], u0).item()
     
 
@@ -39,9 +40,8 @@ for i in range(T-1):
      
 # Plot the results
 
-
-#time = np.dot(10, np.arange(0, T*T_s, T_s))
-time = np.arange(0, T*T_s, T_s)
+time = np.dot(10, np.arange(0, T*T_s, T_s))
+# time = np.arange(0, T*T_s, T_s)
 
 plt.figure(figsize=(10, 6))
 plt.plot(1,1)

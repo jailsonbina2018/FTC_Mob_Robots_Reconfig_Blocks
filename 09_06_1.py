@@ -18,7 +18,7 @@ C =  np.array([[1, 0, 0, 0],
 D = np.zeros((2, 2))
 
 # Initial state
-x0 = np.array([1, 0])
+x0 = np.array([0, 0, 0, 0])
 
 # Sampling time
 Ts = 0.1
