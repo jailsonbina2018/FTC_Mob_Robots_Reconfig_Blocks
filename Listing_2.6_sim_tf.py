@@ -37,7 +37,7 @@ plt.plot(t, u, 'green')
 plt.xlabel('t [s]')
 plt.grid()
 plt.legend(labels=('u',))
-
-plt.show()
 plt.savefig('sim_tf.pdf')
+plt.show()
+
 

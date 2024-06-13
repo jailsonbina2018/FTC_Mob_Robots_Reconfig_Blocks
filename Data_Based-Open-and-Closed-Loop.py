@@ -30,15 +30,15 @@ x0 = np.random.rand(4, 1)
 u0 = np.random.rand(2, 1)
 
 # Entrada aleatória
-u = np.random.rand(2, 15) 
-x = np.zeros((4, 15))
+u = np.random.rand(2, T) 
+x = np.zeros((4, T))
 
 
 
 for i in range(4):
      x[i, 0] = np.dot(A[i, :], x0).item() + np.dot(B[i, :], u0).item()
     
-# Representação de malha aberta baseada em dados
+# Representação em malha aberta baseada em dados
 for i in range(T-1):
      x[:, i+1] = np.dot(A, x[:, i]) + np.dot(B, u[:, i])
      
@@ -52,9 +52,9 @@ X1 = np.dot(B_A, U_X)
 
 # Configurações do cvxpy
 
-U0 = cp.Parameter((2, 15), value=U0)
-X0 = cp.Parameter((4, 15), value=X0)
-X1 = cp.Parameter((4, 15), value=X1)
+U0 = cp.Parameter((2, T), value=U0)
+X0 = cp.Parameter((4, T), value=X0)
+X1 = cp.Parameter((4, T), value=X1)
 
 Q = cp.Variable(shape=(15,4), symmetric=False)
 
@@ -78,14 +78,14 @@ Kn = U0.value @ Q.value @ linalg.inv(X0.value @ Q.value)
 Kn = np.array(Kn)
 Kn = np.round(Kn, decimals=4)
 
-# Representação de malha fechada baseada em dados
+# Representação em malha fechada baseada em dados
 
 x0_cl = np.random.rand(4, 1)
 u0_cl = np.random.rand(2, 1)
 
 # Entrada aleatória
-u_cl = np.random.rand(2, 15) 
-x_cl = np.zeros((4, 15))
+u_cl = np.random.rand(2, T) 
+x_cl = np.zeros((4, T))
 
 for i in range(4):
      x_cl[i, 0] = np.dot(A[i, :], x0_cl).item() + np.dot(B[i, :], u0_cl).item()
@@ -96,8 +96,8 @@ for i in range(T-1):
 
 # Gráfico dos resultados
 
-#time = np.dot(10, np.arange(0, T*T_s, T_s))
-time = np.arange(0, T*T_s, T_s)
+time = np.dot(10, np.arange(0, T*T_s, T_s))
+# time = np.arange(0, T*T_s, T_s)
 
 plt.figure(figsize=(10, 6))
 # plt.plot(1,1)
@@ -109,7 +109,7 @@ plt.plot(time, x[3, :], label='$x_4$')
 plt.xlabel('Tempo (s)')
 plt.ylabel('Estados')
 plt.legend()
-plt.title('Representação de Malha Aberta')
+plt.title('Representação em Malha Aberta')
 
 plt.subplot(2, 1, 2)
 plt.plot(time, x_cl[0, :], label='$x_1c$')
@@ -120,7 +120,8 @@ plt.xlabel('Tempo (s)')
 plt.ylabel('Estados')
 plt.legend()
 
-plt.title('Representação de Malha Fechada')
+plt.title('Representação em Malha Fechada')
 plt.tight_layout()
-plt.show()
 plt.savefig('Data_Based-Open-and-Closed-Loop.png')
+plt.savefig('Data_Based-Open-and-Closed-Loop.pdf')
+plt.show()
