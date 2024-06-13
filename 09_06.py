@@ -28,7 +28,7 @@ sys_cont = ct.ss(A, B, C, D)
 sys_disc = ct.c2d(sys_cont, dt)
 
 # Define the input sequence (for example, a step input)
-t = np.arange(0, 10, dt)
+t = np.arange(0, 15, dt)
 u = np.ones((2,len(t)))  # Step input for both inputs
 
 # Define the initial state

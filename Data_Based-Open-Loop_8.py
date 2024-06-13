@@ -37,93 +37,31 @@ T = 15 # Quantidade de amostras.
 
 
 # Criar o sistema de espaço de estado
-sys = ct.ss(A, B, C, D, )
+sys = ct.ss(A, B, C, D, dt=T_s)
 
 # Trajetórias iniciais de E/S para simulação para obter alguns dados
 
-u = np.random.rand(2, T)
-x = np.zeros((4, T))
+u = np.random.rand(2, 15) - 1
+x = np.zeros((4, 15))
 x0 = np.random.rand(4, 1)
 u0 = np.random.rand(2, 1)
 
-for j in range(n):
-     x[j, 0] = np.dot(sys.A[j, :], x0).item() + np.dot(sys.B[j, :], u0).item()
-
-# print(f'x0 = {x}')
+for i in range(n):
+     x[i, 0] = np.dot(sys.A[i, :], x0).item() + np.dot(sys.B[i, :], u0).item()
      
-# Sistema em Malha Aberta
+
 for i in range(T-1):
      x[:, i+1] = np.dot(sys.A, x[:, i]) + np.dot(sys.B, u[:, i])
+    
 
-print(f'xd = {x[0, :] }')
-
-     
-     
-U0 = np.hstack((u0, u[:, 1:T]))
-X0 = np.hstack((x0, x[:, 1:T]))
-
-B_A = np.concatenate((B, A), axis=1)
-U_X = np.concatenate((U0, X0), axis=0)
-
-# X1 = B_A @ U_X
-X1 = np.dot(B_A, U_X)
-
-# Configurações do cvxpy
-
-U0 = cp.Parameter((2, 15), value=U0)
-X0 = cp.Parameter((4, 15), value=X0)
-X1 = cp.Parameter((4, 15), value=X1)
-
-Q = cp.Variable(shape=(15,4), symmetric=False)
-
-constraints = []
-
-# constraints = [Q >> 0]
-
-z = cp.bmat([
-    [X0 @ Q, X1 @ Q], 
-    [Q.T @ X1.T, X0 @ Q]])
-
-constraints += [z >> 0]
-
-obj = cp.Minimize(0)
-
-prob = cp.Problem(obj, constraints)
-
-prob.solve(solver=cp.MOSEK, verbose=False)
-# print(Q.value)
-
-# Control law
-Kn = U0.value @ Q.value @ linalg.inv(X0.value @ Q.value)
-Kn = np.array(Kn)
-Kn = np.round(Kn, decimals=4)
-
-# print(Kn)
-
-#r = np.ones((2, 15))
-
-# Plot the results
-plt.figure(figsize=(10, 4))
-
-#plt.subplot(1, 2, 1)
 plt.plot(1,1)
 plt.plot(np.arange(T), x[0, :], label='$x_1$')
 plt.plot(np.arange(T), x[1, :], label='$x_2$')
 plt.plot(np.arange(T), x[2, :], label='$x_3$')
 plt.plot(np.arange(T), x[3, :], label='$x_4$')
-plt.plot(np.arange(T), u[0, :], label='$u$')
 plt.xlabel('Tempo (s)')
 plt.ylabel('Valor do Estado')
 plt.title('Trajetória do estado')
 plt.legend()
-
-""" plt.subplot(1, 2, 2)
-plt.plot(np.arange(T), r[0, :], label='$r_1$')
-plt.plot(np.arange(T), r[1, :], label='$2_2$')
-plt.xlabel('Tempo (s)')
-plt.ylabel('Valor de controle')
-plt.title('Trajetória de controle')
-plt.legend() """
-
 plt.tight_layout() 
 plt.show()
